@@ -9,6 +9,7 @@ import os
 import json
 import requests
 import time
+import logging
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 from .minisetting import Setting
@@ -85,7 +86,7 @@ class RepositoryParser:
         self.setting = setting if setting else Setting()
         self.sources = None
         self.failed_list = {}
-        self.logger = get_logger(self.__class__.__name__, self.setting)
+        self.logger = logging.getLogger(self.__class__.__name__)
         self.parsed = []
 
     def download(self, meta: Meta, callback=None):
@@ -138,7 +139,7 @@ class RepositoryParser:
         if not repositories_sources and not database:
             return
         if database:
-            store = RepositoryStore(self.setting, self.logger)
+            store = RepositoryStore(self.setting)
         if not repositories_sources and database:
             try:
                 repositories_sources = store.get_repositories(database)
@@ -389,7 +390,8 @@ class Cgit(RepositoryParser):
             owner = cols[1].text.strip()
 
         meta_repository['name'] = meta_repository['name'] if 'name' in meta_repository and \
-                                                             name != meta_repository['name'] else name
+                                                              meta_repository['name'] and \
+                                                              name != meta_repository['name'] else name
         meta_repository['descriptions'] = meta_repository['descriptions'] if 'descriptions' in meta_repository and \
                                                              len(descriptions) <= len(meta_repository['descriptions']) \
                                                              else descriptions

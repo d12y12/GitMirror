@@ -15,7 +15,7 @@ def get_github_token(setting: Setting = None):
     setting = setting if setting else Setting()
     if exists(setting['GITHUB_TOKEN']):
         token = open(setting['GITHUB_TOKEN'], "r").read().split(':')
-        return (token[0], token[1]) if len(token) == 2 and token[0] != 'your_github_user_name' else ()
+        return (token[0], token[1]) if len(token) == 2 else ()
     return ()
 
 
@@ -23,12 +23,11 @@ def set_logger(setting: Setting, log_enable=True, log_level='DEBUG', log_file=No
     setting['LOG_ENABLED'] = log_enable
     setting['LOG_LEVEL'] = log_level
     setting['LOG_FILE'] = log_file
-    print("set_logger ", setting['LOG_ENABLED'])
 
 
-def get_logger(name, setting=None):
+def config_logging(setting=None):
     setting = setting if setting else Setting()
-    logger = logging.getLogger(name)
+    logger = logging.getLogger()
     logger.setLevel(setting['LOG_LEVEL'])
     formatter = logging.Formatter(setting['LOG_FORMAT'])
     if setting['LOG_FILE']:
@@ -42,4 +41,6 @@ def get_logger(name, setting=None):
         logger.addHandler(console)
     else:
         logger.addHandler(logging.NullHandler())
-    return logger
+
+def get_logger(name, setting=None):
+    return None

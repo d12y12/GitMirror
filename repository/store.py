@@ -3,8 +3,8 @@
 
 import sqlite3
 from os.path import exists, basename
+import logging
 from .minisetting import Setting
-from .utils import get_logger
 
 
 class Repository:
@@ -87,7 +87,7 @@ class DatabaseError(Exception):
 class RepositoryStore:
     def __init__(self, setting: Setting = None, logger=None):
         self.setting = Setting() if not setting else setting
-        self.logger = logger or get_logger(__name__, self.setting)
+        self.logger = logger or logging.getLogger(self.__class__.__name__)
         self.sqlite_file = ''
         self.sqlite_connection = None
 
@@ -308,7 +308,7 @@ class RepositoryStore:
     def update_config(self, sqlite_file: str, name: str, value):
         self.open(sqlite_file)
         try:
-            self.logger.debug("update <> into <{}> with {}".format(name, basename(sqlite_file), value))
+            self.logger.debug("update <{}> into <{}> with <{}>".format(name, basename(sqlite_file), value))
             cursor = self.sqlite_connection.cursor()
             sqlite_update_query = "UPDATE Configurations SET {}=?".format(name)
             cursor.execute(sqlite_update_query, (value,))
@@ -325,15 +325,15 @@ class RepositoryStore:
     
     def get_full_config(self, sqlite_file: str):
         self.open(sqlite_file)
-        ret = []
+        ret = {}
         try:
             self.sqlite_connection.row_factory = sqlite3.Row
             cursor = self.sqlite_connection.cursor()
             sqlite_select_query = "SELECT * FROM Configurations"
             cursor.execute(sqlite_select_query)
-            records = cursor.fetchall()
-            if records:
-                ret = [dict(row) for row in records]
+            record = cursor.fetchone()
+            if record:
+                ret = dict(record)
             cursor.close()
         except sqlite3.Error as error:
             self.logger.error("数据库出错啦: %s", error)

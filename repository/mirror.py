@@ -13,6 +13,7 @@ import json
 import shutil
 import subprocess
 import time
+import logging
 from hashlib import md5
 
 from .minisetting import Setting
@@ -32,7 +33,7 @@ class RepositoryMirror:
     def __init__(self, setting: Setting = None):
         self.setting = setting if setting else Setting()
         self.failed_list = []
-        self.logger = get_logger(self.__class__.__name__, self.setting)
+        self.logger = logging.getLogger(self.__class__.__name__)
         self.mirrored = []
 
     def get_source_dir_from_url(self, source_url: str):
@@ -122,7 +123,7 @@ class RepositoryMirror:
         if not database:
             raise MirrorError("No input database")
         try:
-            store = RepositoryStore(self.setting, self.logger)
+            store = RepositoryStore(self.setting)
             repositories = store.get_repository_list(database)
         except Exception as e:
             raise MirrorError("Read repository source failed: {}".format(str(e)))
@@ -149,7 +150,7 @@ class RepositoryMirror:
         local_repositories = self.get_local_repositories(data_dir)
         remote_repositories = self.get_remote_repositories(database)
 
-        store = RepositoryStore(self.setting, self.logger)
+        store = RepositoryStore(self.setting)
 
         self.failed_list = []
         for repository in remote_repositories:
@@ -160,7 +161,7 @@ class RepositoryMirror:
                                for remote_repo in self.get_remote_repositories(database)]
         if consistency:
             repos_to_move = [repo for repo in local_repositories if repo not in remote_repositories]
-            backup_dir = self.setting['BACKUP_DIR']
+            backup_dir = join(self.setting['BACKUP_DIR'],'repositories')
             for repo in repos_to_move:
                 repo_name = basename(repo)
                 source_name = basename(dirname(repo))
