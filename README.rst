@@ -21,7 +21,8 @@ Options
 --list                  List all services names available
 --parse                 Parse repositories for <service name>
 --mirror                Update from remote & Push to target for <service name>
---get=configs or repos  Get configuration or repositories for <service name> save to [output]
+--get=configs or repos  
+                        Get configuration or repositories for <service name> save to [output]
 --add                   Create or Update <service name>
 --remove                Backup and Remove <service name>
 
