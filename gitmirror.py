@@ -122,7 +122,7 @@ def cli(argv=None):
     group_global.add_option("--logfile", metavar="FILE",
                      help="log file. if omitted stderr will be used")
     group_global.add_option("-L", "--loglevel", metavar="LEVEL", default=None,
-                     help="log level (default: debug)")
+                     help="log level (default: DEBUG)")
     group_global.add_option("--nolog", action="store_true",
                      help="disable logging completely")
     parser.add_option_group(group_global)
@@ -133,8 +133,8 @@ def cli(argv=None):
                       help="Parse repositories for <service name>")
     parser.add_option("--mirror", action='store_true', dest="mirror",
                       help="Update from remote & Push to target for <service name>")
-    parser.add_option("--get", metavar="configs or repos", dest="get",
-                      help="Get configuration or repositories for <service name>")
+    parser.add_option("--get", metavar="CONTENT", dest="get",
+                      help="Get content(configs/repos) from <service name> save to [output]")
     parser.add_option("--add", action='store_true', dest="add",
                       help="Create or Update <service name>")
     parser.add_option("--remove", action='store_true', dest="remove",
