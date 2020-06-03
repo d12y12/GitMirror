@@ -257,7 +257,7 @@ class RepositoryManager:
         return True
 
     def set_service_cron(self, service_name):
-        self.logger.info("set service <{}> crontab".format(service_name))
+        self.logger.info("set service <{}> crontab for current user".format(service_name))
         if not self.service_name_available(service_name):
             return False
         sqlite_file = self._get_sqlite_file(service_name)
@@ -266,9 +266,15 @@ class RepositoryManager:
         except Exception as e:
             self.logger.error('failed: {}'.format(str(e)))
             return False
-        user = 'root'
+        user = subprocess.run(["whoami"], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
+        if user == 'root':
+            self.logger.warn("you are using root user")
+            print("set service <{}> crontab for root user".format(service_name))
         app = self.setting['CMD']
-        cron = '{} {} {} {} {}\n'.format(crontab, user, app, '--batchrun', service_name)
+        cron = 'SHELL=/bin/sh\n' \
+               'PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin\n\n' \
+               '# m h dom mon dow user  command\n' \
+               '{} {} {} {} {}\n'.format(crontab, user, app, '--batchrun', service_name)
         cron_path = join(self.setting['CRON_DIR'], service_name)                                    
         with open(cron_path, "w") as f:
             f.write(cron)

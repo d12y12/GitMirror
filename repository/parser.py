@@ -396,10 +396,11 @@ class Cgit(RepositoryParser):
                                                              len(descriptions) <= len(meta_repository['descriptions']) \
                                                              else descriptions
         meta_repository['owner'] = meta_repository['owner'] if 'owner' in meta_repository and \
+                                                               meta_repository['owner'] and \
                                                                owner != meta_repository['owner'] else owner
         section = meta_repository['section'] if 'section' in meta_repository else ""
-        section = self.setting['DEFAULT_SECTION_NAME'] if not section and self.setting[
-            'ENABLE_DEFAULT_SECTION'] else section
+        section = self.setting['DEFAULT_SECTION_NAME'] if not section and \
+                                                          self.setting['ENABLE_DEFAULT_SECTION'] else section
 
         # Process clone url
         clone_url = []
