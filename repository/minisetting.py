@@ -30,7 +30,7 @@ class Setting:
             "LOG_DIR": join(dirname(dirname(abspath(__file__))), "log"),
             "DATA_DIR": '/srv/git',
             "CGITRC_DIR": "/etc/cgitrc.d/",
-            "CRON_DIR": "/etc/cron.d/"
+            "CRON_FILE": join(dirname(dirname(abspath(__file__))), "crontab")
         }
 
     def __getitem__(self, name):

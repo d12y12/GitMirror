@@ -9,6 +9,7 @@ import datetime
 import filecmp
 import subprocess
 import logging
+import platform
 from .minisetting import Setting
 from .store import RepositoryStore
 from .parser import Cgit, GitHub, ParserError
@@ -256,47 +257,49 @@ class RepositoryManager:
             print(json.dumps(repos, indent=2))
         return True
 
-    def set_service_cron(self, service_name):
-        self.logger.info("set service <{}> crontab for current user".format(service_name))
-        if not self.service_name_available(service_name):
-            return False
-        sqlite_file = self._get_sqlite_file(service_name)
-        try:
-            crontab = self.store.get_crontab(sqlite_file)
-        except Exception as e:
-            self.logger.error('failed: {}'.format(str(e)))
-            return False
+    def set_crontab(self):
+        if platform.system() != 'Linux':
+            self.logger.warn("No Linux, Crontab will not set!")
+            return True
         user = subprocess.run(["whoami"], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
         if user == 'root':
             self.logger.warn("you are using root user")
-            print("set service <{}> crontab for root user".format(service_name))
-        app = self.setting['CMD']
-        cron = 'SHELL=/bin/sh\n' \
-               'PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin\n\n' \
-               '# m h dom mon dow user  command\n' \
-               '{} {} {} {} {}\n'.format(crontab, user, app, '--batchrun', service_name)
-        cron_path = join(self.setting['CRON_DIR'], service_name)                                    
+            print("set crontab for root user")
+        self.logger.info("set crontab for user {}".format(user))
+        cron_header = 'SHELL=/bin/sh\n' \
+                      'PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin\n\n' \
+                      '# m h dom mon dow user  command\n'
+        services, services_possible = self.get_services_list()
+        crontab = []
+        for service_name in services:
+            sqlite_file = self._get_sqlite_file(service_name)
+            try:
+                cron = self.store.get_crontab(sqlite_file)
+            except Exception as e:
+                self.logger.error('failed: {}'.format(str(e)))
+                return False
+            
+            app = self.setting['CMD']
+            crontab.append('{} {} {} {} {}\n'.format(cron, user, app, '--batchrun', service_name))
+        cron_path = self.setting['CRON_FILE']
+        cron = cron_header + "".join(crontab)
         with open(cron_path, "w") as f:
             f.write(cron)
+        subprocess.run(['crontab', '-u', user, cron_path])
         return True
     
     def autoconf(self):
         services, services_possible = self.get_services_list()
         for service_name in services_possible:
             self.add_service(service_name)
-        services, services_possible = self.get_services_list()
-        for service_name in services:
-            self.set_service_cron(service_name)
+        self.set_crontab()
 
     def batchrun_service(self, service_name:str):
         self.parse_service(service_name)
         self.mirror_service(service_name)
     
     def init(self):
-        services, services_possible = self.get_services_list()
-        for service_name in services_possible:            
-            self.add_service(service_name)
+        self.autoconf()
         services, services_possible = self.get_services_list()
         for service_name in services:
             self.batchrun_service(service_name)
-            self.set_service_cron(service_name)
