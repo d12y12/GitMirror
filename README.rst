@@ -21,16 +21,14 @@ Options
 --list                  List all services names available
 --parse                 Parse repositories for <service name>
 --mirror                Update from remote & Push to target for <service name>
---get=configs or repos  
-                        Get configuration or repositories for <service name> save to [output]
+--get=CONTENT           Get content(configs/repos)for <service name> save to [output]
 --add                   Create or Update <service name>
 --remove                Backup and Remove <service name>
 
 Global Options
 --------------
 --logfile=FILE          log file. if omitted stderr will be used
---loglevel=LEVEL, -L LEVEL
-                        log level (default: debug)
+--loglevel=LEVEL        log level (default: debug)
 --nolog                 disable logging completely
 
 Devspace Options
@@ -38,4 +36,3 @@ Devspace Options
 --autoconf              Auto add service avaialbe and update crontab
 --batchrun              Run parse and mirror for <service name>
 --init                  For devspace init all service and first checkout
-
