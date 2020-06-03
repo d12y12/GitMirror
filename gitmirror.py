@@ -115,13 +115,13 @@ def cli(argv=None):
     if argv is None:
         argv = sys.argv
 
-    usage = "usage: %prog [options] [service name]"
+    usage = "usage: %prog [options] [service name] [output]"
     parser = optparse.OptionParser(formatter=optparse.TitledHelpFormatter(),
                                    conflict_handler='resolve', usage=usage)
     group_global = optparse.OptionGroup(parser, "Global Options")
     group_global.add_option("--logfile", metavar="FILE",
                      help="log file. if omitted stderr will be used")
-    group_global.add_option("-L", "--loglevel", metavar="LEVEL", default=None,
+    group_global.add_option("--loglevel", metavar="LEVEL", default=None,
                      help="log level (default: DEBUG)")
     group_global.add_option("--nolog", action="store_true",
                      help="disable logging completely")
