@@ -197,8 +197,8 @@ class RepositoryManager:
             return cgit_url
         schema = schema if schema else 'http'
         cgit_url = host if host.startswith('http') else schema+'://{}'.format(host)
-        cgit_url = host if host.endswith('/') else host + '/'
-        cgit_url = host + service_name
+        cgit_url = cgit_url if cgit_url.endswith('/') else cgit_url + '/'
+        cgit_url = cgit_url + service_name
         return cgit_url
 
     def mirror_service(self, service_name: str):
