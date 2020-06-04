@@ -157,29 +157,22 @@ class RepositoryParser:
             meta_source['excludes'] = repositories_source['excludes']
             meta_source['target_url'] = ','.join(repositories_source['targets'])
 
-            self.get_source_type(meta_source)
+            self.get_source_type(meta_source, self.process_error)
             if meta_source['error']:
-                self.process_error(meta_source)
                 continue
             if meta_source['source_type'] == 'index':
-                counter1 = 0
-                counter2 = 0
                 for meta_repository in self.parse_index(meta_source, self.process_error):
-                    counter1 += 1
                     if meta_repository['error']:
                         continue
                     if database:
                         ret = store.add_repository(database, meta_repository['repository'])
                         if isinstance(ret, int):
-                            counter2 += 1
                             yield meta_repository.to_dict()
                         else:
                             meta_repository['error'] = json.dumps(ret) if isinstance(ret, dict) else ret
                             self.process_error(meta_source)
                     else:
                         yield meta_repository.to_dict()
-                print("total 1: {}".format(counter1))
-                print("total 2: {}".format(counter2))
             else:
                 repository_list.append(meta_source)
 
@@ -203,7 +196,7 @@ class RepositoryParser:
                 name = os.path.basename(database).split('.')[0]
             self.save_status(status_path, name)
 
-    def get_source_type(self, meta_source: Meta):
+    def get_source_type(self, meta_source: Meta, error_callback=None):
         raise NotImplementedError('Need to implemented in subclass')
 
     def matches_excludes(self, meta: Meta):
@@ -230,7 +223,7 @@ class RepositoryParser:
 
         if not self.failed_list or not path:
             return
-            # process failed list
+        # process failed list
         time_str = time.strftime("%Y%m%d_%H%M%S", time.localtime())
         result = {
             "generatedAt": time_str,
@@ -238,14 +231,17 @@ class RepositoryParser:
             "status": self.failed_list
         }
         name = name if name else self.__class__.__name__.lower()
-        file_name = '_'.join(('parse', name, time_str)) + '.json'
-        file = os.path.join(path, file_name)
-        with open(file, 'w', encoding="utf-8") as f:
+        file_name = os.path.join(path, '_'.join((name, 'parse', time_str)) + '.json')
+        self.logger.info("save parse status to <{}>".format(file_name))
+        with open(file_name, 'w', encoding="utf-8") as f:
             json.dump(result, f, indent=2, ensure_ascii=False)
 
 
 class Cgit(RepositoryParser):
-    def get_source_type(self, meta_source: Meta):
+
+    def get_source_type(self, meta_source: Meta, error_callback=None):
+        if not error_callback:
+            error_callback = self.process_error
         meta_source['url'] = meta_source['source']
         self.download(meta_source)
         if meta_source['error']:
@@ -262,6 +258,7 @@ class Cgit(RepositoryParser):
             meta_source['source_type'] = "repository"
         else:
             meta_source['error'] = "parse failed"
+            error_callback(meta_source)
         return meta_source
 
     def matches_excludes(self, meta: Meta):
@@ -285,7 +282,6 @@ class Cgit(RepositoryParser):
         original_offset = offset
         while True:
             meta_index = meta_source.partial_copy()
-            # meta_index.clear_error()
             meta_index['url'] = original_url + "?ofs=" + str(offset)
             if meta_index['url'] in self.parsed:
                 meta_index['error'] = "already parsed {}".format(meta_index['source'])
@@ -317,11 +313,8 @@ class Cgit(RepositoryParser):
                 error_callback(meta_index)
                 continue
             section = ""
-            counter = 0
             for row in table.find_all('tr'):
-                counter += 1
                 meta_repository = meta_index.partial_copy()
-                # meta_repository.clear_error()
                 cols = row.find_all('td')
                 # Table header part
                 if len(cols) == 0:
@@ -427,6 +420,19 @@ class Cgit(RepositoryParser):
 
 class GitHub(RepositoryParser):
 
+    def get_source_type(self, meta_source: Meta, error_callback=None):
+        if not error_callback:
+            error_callback = self.process_error
+        parsed_src = meta_source['source'].split("/")
+        if len(parsed_src) == 1:
+            meta_source['source_type'] = 'index'
+        elif len(parsed_src) == 2:
+            meta_source['source_type'] = 'repository'
+        else:
+            meta_source['error'] = "parse failed"
+            error_callback(meta_source)
+        return meta_source
+
     def matches_excludes(self, meta):
         for exclude in meta['excludes']:
             if exclude.index("/") != -1:
@@ -438,16 +444,6 @@ class GitHub(RepositoryParser):
                 if meta['owner'] == exclude:
                     return True
         return False
-
-    def get_source_type(self, meta_source: Meta):
-        parsed_src = meta_source['source'].split("/")
-        if len(parsed_src) == 1:
-            meta_source['source_type'] = 'index'
-        elif len(parsed_src) == 2:
-            meta_source['source_type'] = 'repository'
-        else:
-            meta_source['error'] = "parse failed"
-        return meta_source
 
     def parse_index(self, meta_source: Meta, error_callback=None):
         if not error_callback:
@@ -510,15 +506,18 @@ class GitHub(RepositoryParser):
             return meta_repository
         self.download(meta_repository)
         if meta_repository['error']:
+            error_callback(meta_repository)
             return meta_repository
         res_json = json.loads(meta_repository['html'])
         if "message" in res_json:
             meta_repository['error'] = "Github cannot find this repository"
+            error_callback(meta_repository)
             return meta_repository
 
         # parser repository
         if not res_json['clone_url']:
             meta_repository['error'] = "No clone URL"
+            error_callback(meta_repository)
             return meta_repository
 
         meta_repository['name'] = res_json['name']

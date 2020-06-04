@@ -192,9 +192,9 @@ class RepositoryMirror:
             "status": self.failed_list
         }
         name = name if name else self.__class__.__name__.lower()
-        file_name = '_'.join(('mirror',name, time_str)) + '.json'
-        file = os.path.join(path, file_name)
-        with open(file, 'w', encoding="utf-8") as f:
+        file_name = os.path.join(path, '_'.join((name, 'mirror', time_str)) + '.json')
+        self.logger.info("save mirror status to <{}>".format(file_name))
+        with open(file_name, 'w', encoding="utf-8") as f:
             json.dump(result, f, indent=2, ensure_ascii=False)
 
     def generate_cgitrc(self, data_dir='', database='', cgit_url='', cgitrc_file=''):

@@ -280,12 +280,16 @@ class RepositoryManager:
                 return False
             
             app = self.setting['CMD']
-            crontab.append('{} {} {} {} {}\n'.format(cron, user, app, '--batchrun', service_name))
+            cron_log = join(self.setting['LOG_DIR'], service_name+'.log')
+            crontab.append('{} {} {} {} >> {} 2>&1\n'.format(cron, app, '--batchrun', service_name, cron_log))
         cron_path = self.setting['CRON_FILE']
         cron = cron_header + "".join(crontab)
         with open(cron_path, "w") as f:
             f.write(cron)
+        self.logger.info("set cron tab")
         subprocess.run(['crontab', '-u', user, cron_path])
+        self.logger.info("reload cron config")
+        subprocess.run(['/etc/init.d/cron', 'reload'])
         return True
     
     def autoconf(self):
