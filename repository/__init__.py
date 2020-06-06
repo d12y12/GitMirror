@@ -287,9 +287,11 @@ class RepositoryManager:
         with open(cron_path, "w") as f:
             f.write(cron)
         self.logger.info("set cron tab")
-        subprocess.run(['crontab', '-u', user, cron_path])
-        self.logger.info("reload cron config")
-        subprocess.run(['/etc/init.d/cron', 'reload'])
+        # "crontab -u user cron_path" need root in alpine 
+        subprocess.run(['crontab', cron_path])
+        # "crond reload" not exists in alpine
+        # self.logger.info("reload cron config")
+        # subprocess.run(['/etc/init.d/cron', 'reload'])
         return True
     
     def autoconf(self):

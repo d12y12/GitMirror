@@ -25,8 +25,8 @@ VALUES
     'yocto',
     '192.168.0.108:8090',
     1,
-    '0 */1 * * *',
-    '{"cgit": [{"source": "http://git.yoctoproject.org/cgit.cgi/", "excludes": ["http://git.yoctoproject.org/clean/cgit.cgi/yocto-testresults/", "http://git.yoctoproject.org/clean/cgit.cgi/yp-qa-build-perf-data/"], "targets": []}], "github": []}',
+    '*/5 * * * *',
+    '{"cgit": [{"source": "http://git.yoctoproject.org/cgit.cgi/crops/", "excludes": ["http://git.yoctoproject.org/clean/cgit.cgi/yocto-testresults/", "http://git.yoctoproject.org/clean/cgit.cgi/yp-qa-build-perf-data/"], "targets": []}], "github": []}',
     ''
   );
 -- Table: Repositories
