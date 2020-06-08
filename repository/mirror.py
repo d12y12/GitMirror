@@ -156,6 +156,8 @@ class RepositoryMirror:
         for repository in remote_repositories:
             if self.mirror(data_dir, repository):
                 store.update_update_time(database, repository['id'])
+            # TODO mirroring the repository to a new location 
+            # git push --prune git@example.com:/new-location.git +refs/remotes/origin/*:refs/heads/* +refs/tags/*:refs/tags/*
 
         remote_repositories = [self.get_repository_path(data_dir, remote_repo)
                                for remote_repo in self.get_remote_repositories(database)]
