@@ -14,8 +14,8 @@ def get_version(setting: Setting = None):
 def get_github_token(setting: Setting = None):
     setting = setting if setting else Setting()
     if exists(setting['GITHUB_TOKEN']):
-        token = open(setting['GITHUB_TOKEN'], "r").read().split(':')
-        return (token[0], token[1]) if len(token) == 2 else ()
+        token = open(setting['GITHUB_TOKEN'], "r").read().strip().split(':')
+        return (token[0], token[1]) if len(token) == 2 and token[0] != "your_github_user_name" else ()
     return ()
 
 
