@@ -278,10 +278,10 @@ class RepositoryManager:
             except Exception as e:
                 self.logger.error('failed: {}'.format(str(e)))
                 return False
-            
-            app = self.setting['CMD']
-            cron_log = join(self.setting['LOG_DIR'], service_name+'.log')
-            crontab.append('{} {} {} {} >> {} 2>&1\n'.format(cron, app, '--batchrun', service_name, cron_log))
+            if cron:
+                app = self.setting['CMD']
+                cron_log = join(self.setting['LOG_DIR'], service_name+'.log')
+                crontab.append('{} {} {} {} >> {} 2>&1\n'.format(cron, app, '--batchrun', service_name, cron_log))
         cron_path = self.setting['CRON_FILE']
         cron = cron_header + "".join(crontab)
         with open(cron_path, "w") as f:
@@ -305,7 +305,9 @@ class RepositoryManager:
         self.mirror_service(service_name)
     
     def init(self):
-        self.autoconf()
+        services, services_possible = self.get_services_list()
+        for service_name in services_possible:
+            self.add_service(service_name)
         services, services_possible = self.get_services_list()
         for service_name in services:
             self.batchrun_service(service_name)
