@@ -211,7 +211,7 @@ class RepositoryManager:
         os.makedirs(status_path, exist_ok=True)
         data_dir = join(self.setting['DATA_DIR'], service_name)
         os.makedirs(data_dir, exist_ok=True)
-        cgitrc_file = join(self.setting['CGITRC_DIR'], service_name+'.repo')
+        cgitrc_file = join(self.setting['DATA_DIR'], service_name, service_name+'.repo')
         cgit_url = self._get_cgit_url(service_name)
         if not cgit_url:
             return False
