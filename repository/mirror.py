@@ -113,10 +113,11 @@ class RepositoryMirror:
         local_repositories = []
         for name in names:
             source_path = join(data_dir, name)
-            files = os.listdir(source_path)
-            for file in files:
-                if file.endswith(".git") and file != ".git":
-                    local_repositories.append(normpath(abspath(join(source_path, file))).replace('\\','/'))
+            if isdir(source_path):
+                files = os.listdir(source_path)
+                for file in files:
+                    if file.endswith(".git") and file != ".git":
+                        local_repositories.append(normpath(abspath(join(source_path, file))).replace('\\','/'))
         return local_repositories
 
     def get_remote_repositories(self, database):
