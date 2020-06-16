@@ -19,11 +19,12 @@ def get_github_token(setting: Setting = None):
     return ()
 
 
-def set_logger(setting: Setting, log_enable=True, log_level='DEBUG', log_file=None):
+def set_logger(setting: Setting, log_enable=True, log_level='DEBUG', log_file=None, log_dir=''):
     setting['LOG_ENABLED'] = log_enable
     setting['LOG_LEVEL'] = log_level
     setting['LOG_FILE'] = log_file
-
+    if log_dir:
+        setting['LOG_DIR'] = log_dir
 
 def config_logging(setting=None):
     setting = setting if setting else Setting()

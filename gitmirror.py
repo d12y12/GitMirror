@@ -33,6 +33,9 @@ def process(options, args):
 
     if options.loglevel:
         set_logger(setting, log_enable=True, log_level=options.loglevel)
+    
+    if options.logdir:
+        set_logger(setting, log_enable=True, log_dir=options.logdir)
 
     if options.nolog:
         set_logger(setting, log_enable=False)
@@ -119,6 +122,8 @@ def cli(argv=None):
     parser = optparse.OptionParser(formatter=optparse.TitledHelpFormatter(),
                                    conflict_handler='resolve', usage=usage)
     group_global = optparse.OptionGroup(parser, "Global Options")
+    group_global.add_option("--logdir", metavar="PATH",
+                     help="Log directory. if omitted local log directory will be created")
     group_global.add_option("--logfile", metavar="FILE",
                      help="log file. if omitted stderr will be used")
     group_global.add_option("--loglevel", metavar="LEVEL", default=None,
