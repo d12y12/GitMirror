@@ -10,6 +10,7 @@ class Setting:
             "CMD": abspath(join(dirname(dirname(abspath(__file__))), "gitmirror.py")),
             "VERSION": join(dirname(dirname(abspath(__file__))), "VERSION"),
             "GITHUB_TOKEN": join(dirname(dirname(abspath(__file__))), "github_token"),
+            "GITEE_TOKEN": join(dirname(dirname(abspath(__file__))), "gitee_token"),
             "LOG_ENABLED": True,
             "LOG_FORMAT": '%(asctime)s:%(name)s:%(levelname)s:%(message)s',
             "LOG_LEVEL": 'DEBUG',

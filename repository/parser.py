@@ -13,7 +13,7 @@ import logging
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 from .minisetting import Setting
-from .utils import get_logger, get_github_token
+from .utils import get_logger, get_token
 from .store import Repository, RepositoryStore
 
 
@@ -97,15 +97,16 @@ class RepositoryParser:
         :param callback: callback function
         :returns:if use callback return callback result
         """
-        is_github = False
-        if 'github' in urlparse(meta['url']).netloc:
-            is_github = True
+        
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0"
         }
-        if is_github:
+        auth = ()
+        if 'github' in urlparse(meta['url']).netloc:
             headers['Accept'] = "application/vnd.github.v3+json"
-        auth = get_github_token() if is_github else ()
+            auth = get_token(token_type='github')
+        if 'gitee' in urlparse(meta['url']).netloc:
+            auth = get_token(token_type='gitee')
         r = None
         retry = 0 if self.setting['REQUESTS_RETRY_ENABLED'] else self.setting['REQUESTS_RETRY_TIMES']
         while retry <= self.setting['REQUESTS_RETRY_TIMES']:

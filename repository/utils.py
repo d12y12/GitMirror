@@ -11,11 +11,14 @@ def get_version(setting: Setting = None):
     return open(setting['VERSION'], "r").read().strip()
 
 
-def get_github_token(setting: Setting = None):
+def get_token(setting: Setting = None, token_type=''):
+    if not token_type or token_type.upper() not in ['GITHUB', 'GITEE']:
+        return ()
     setting = setting if setting else Setting()
-    if exists(setting['GITHUB_TOKEN']):
-        token = open(setting['GITHUB_TOKEN'], "r").read().strip().split(':')
-        return (token[0], token[1]) if len(token) == 2 and token[0] != "your_github_user_name" else ()
+    key = token_type.upper() + '_TOKEN'
+    if exists(setting[key]):
+        token = open(setting[key], "r").read().strip().split(':')
+        return (token[0], token[1]) if len(token) == 2 else ()
     return ()
 
 
