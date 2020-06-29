@@ -17,7 +17,6 @@ import logging
 from hashlib import md5
 
 from .minisetting import Setting
-from .utils import get_logger
 from .store import Repository, RepositoryStore
 
 

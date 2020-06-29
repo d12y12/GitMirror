@@ -186,7 +186,7 @@ class RepositoryManager:
         else:
             self.logger.info("failed: Empty repository source: {}".format(sqlite_file))
             return False
-        return True if repo_list else False
+        return repo_list if repo_list else False
 
     def _get_cgit_url(self, service_name='', schema=''):
         cgit_url = ''
@@ -259,11 +259,10 @@ class RepositoryManager:
 
     def set_crontab(self):
         if platform.system() != 'Linux':
-            self.logger.warn("No Linux, Crontab will not set!")
-            return True
+            self.logger.warning("Not Linux system, Crontab will not set!")
         user = subprocess.run(["whoami"], stdout=subprocess.PIPE).stdout.decode('utf-8').strip()
         if user == 'root':
-            self.logger.warn("you are using root user")
+            self.logger.warning("you are using root user")
             print("set crontab for root user")
         self.logger.info("set crontab for user {}".format(user))
         cron_header = 'SHELL=/bin/sh\n' \
@@ -286,9 +285,10 @@ class RepositoryManager:
         cron = cron_header + "".join(crontab)
         with open(cron_path, "w") as f:
             f.write(cron)
-        self.logger.info("set cron tab")
-        # "crontab -u user cron_path" need root in alpine 
-        subprocess.run(['crontab', cron_path])
+        # "crontab -u user cron_path" need root in alpine
+        if platform.system() == 'Linux':
+            self.logger.info("set cron tab")
+            subprocess.run(['crontab', cron_path])
         # "crond reload" not exists in alpine
         # self.logger.info("reload cron config")
         # subprocess.run(['/etc/init.d/cron', 'reload'])

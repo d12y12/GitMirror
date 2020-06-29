@@ -8,7 +8,10 @@ from .minisetting import Setting
 
 def get_version(setting: Setting = None):
     setting = setting if setting else Setting()
-    return open(setting['VERSION'], "r").read().strip()
+    version = ""
+    with open(setting['VERSION'], "r", encoding='utf8') as version_f:
+        version = version_f.read().strip()
+    return version
 
 
 def get_token(setting: Setting = None, token_type=''):
@@ -17,7 +20,9 @@ def get_token(setting: Setting = None, token_type=''):
     setting = setting if setting else Setting()
     key = token_type.upper() + '_TOKEN'
     if exists(setting[key]):
-        token = open(setting[key], "r").read().strip().split(':')
+        token = ()
+        with open(setting[key], "r", encoding='utf8') as token_f:
+            token = token_f.read().strip().split(':')
         return (token[0], token[1]) if len(token) == 2 else ()
     return ()
 
@@ -28,6 +33,7 @@ def set_logger(setting: Setting, log_enable=True, log_level='DEBUG', log_file=No
     setting['LOG_FILE'] = log_file
     if log_dir:
         setting['LOG_DIR'] = log_dir
+
 
 def config_logging(setting=None):
     setting = setting if setting else Setting()
@@ -45,6 +51,3 @@ def config_logging(setting=None):
         logger.addHandler(console)
     else:
         logger.addHandler(logging.NullHandler())
-
-def get_logger(name, setting=None):
-    return None

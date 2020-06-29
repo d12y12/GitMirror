@@ -13,7 +13,7 @@ import logging
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 from .minisetting import Setting
-from .utils import get_logger, get_token
+from .utils import get_token
 from .store import Repository, RepositoryStore
 
 
@@ -111,9 +111,14 @@ class RepositoryParser:
         retry = 0 if self.setting['REQUESTS_RETRY_ENABLED'] else self.setting['REQUESTS_RETRY_TIMES']
         while retry <= self.setting['REQUESTS_RETRY_TIMES']:
             try:
-                r = requests.get(meta['url'], auth=auth, headers=headers,
-                                 timeout=(self.setting['REQUESTS_CONNECTION_TIMEOUT'],
-                                          self.setting['REQUESTS_READ_TIMEOUT']))
+                if auth:
+                    r = requests.get(meta['url'], auth=auth, headers=headers,
+                                    timeout=(self.setting['REQUESTS_CONNECTION_TIMEOUT'],
+                                            self.setting['REQUESTS_READ_TIMEOUT']))
+                else:
+                    r = requests.get(meta['url'], headers=headers,
+                                    timeout=(self.setting['REQUESTS_CONNECTION_TIMEOUT'],
+                                            self.setting['REQUESTS_READ_TIMEOUT']))
                 r.encoding = 'utf-8'
                 # print(r.headers)
                 break
@@ -527,6 +532,123 @@ class GitHub(RepositoryParser):
         meta_repository['descriptions'] = res_json['description']
         meta_repository['html_url'] = res_json['html_url']
         meta_repository['clone_url'] = res_json['clone_url']
+        if self.matches_excludes(meta_repository):
+            meta_repository['error'] = "exclude"
+            error_callback(meta_repository)
+            return meta_repository
+        return meta_repository
+
+class Gitee(GitHub):
+    def parse_index(self, meta_source: Meta, error_callback=None):
+        if not error_callback:
+            error_callback = self.process_error
+        parsed_src = meta_source['source'].split("/")
+
+        # Check it's a user/orgs/enterprise
+        sub_type = ''
+        orgs_check_ulr = "https://gitee.com/api/v5/orgs/{}".format(parsed_src[0])
+        enterprises_check_ulr = "https://gitee.com/api/v5/enterprises/{}".format(parsed_src[0])
+        for url in [orgs_check_ulr, enterprises_check_ulr]:
+            tempMeta = Meta()
+            tempMeta['url'] = url
+            self.download(tempMeta)
+            if tempMeta['error']:
+                continue
+            res_json = json.loads(tempMeta['html'])
+            if "message" in res_json:
+                # not a org
+                continue
+            if 'orgs' in tempMeta['url']:
+                sub_type = 'orgs'
+                break
+            if 'enterprises' in tempMeta['url']:
+                sub_type = 'enterprises'
+                break
+
+        original_url = ''
+        if sub_type == 'orgs':
+            original_url = "https://gitee.com/api/v5/orgs/{}/repos".format(parsed_src[0])
+        elif sub_type == 'enterprises':
+            original_url = "https://gitee.com/api/v5/enterprises/{}/repos".format(parsed_src[0])
+        else:
+            original_url = "https://gitee.com/api/v5/users/{}/repos".format(parsed_src[0])
+        
+        page = 1
+
+        while True:
+            meta_index = meta_source.partial_copy()
+            meta_index['url'] = original_url + "?&type=all&page=" + str(page) + '&per_page=100'
+            if meta_index['url'] in self.parsed:
+                meta_index['error'] = "already parsed {}".format(meta_index['source'])
+                error_callback(meta_index)
+                break
+            self.download(meta_index)
+            if meta_index['error']:
+                error_callback(meta_index)
+                break
+            res_json = json.loads(meta_index['html'])
+            if not res_json:
+                if page == 1:
+                    meta_index['error'] = "empty index"
+                    error_callback(meta_index)
+                break
+            page += 1
+            for repo in res_json:
+                meta_repository = meta_index.partial_copy()
+                if not repo['html_url']:
+                    meta_repository['error'] = "No clone URL"
+                    error_callback(meta_repository)
+                    continue
+                meta_repository['name'] = repo['name']
+                meta_repository['section'] = repo['owner']['name'] if not sub_type else repo['namespace']['name']
+                meta_repository['owner'] = repo['owner']['name']
+                meta_repository['descriptions'] = repo['description']
+                meta_repository['html_url'] = repo['url']
+                meta_repository['clone_url'] = repo['html_url']
+                if self.matches_excludes(meta_repository):
+                    meta_repository['error'] = "exclude"
+                    error_callback(meta_repository)
+                    continue
+                yield meta_repository
+
+    def parse_repository(self, meta_source: Meta, error_callback=None):
+        """
+            Parser repository page.
+
+            :param meta_source: include necessary for build repository
+            :param error_callback: error process callback
+            :returns: repository
+        """
+        if not error_callback:
+            error_callback = self.process_error
+        parsed_src = meta_source['source'].split("/")
+        meta_repository = meta_source.partial_copy()
+        meta_repository['url'] = "https://gitee.com/api/v5/repos/{}/{}".format(parsed_src[0], parsed_src[1])
+        if self.matches_excludes(meta_repository):
+            meta_repository['error'] = 'exclude'
+            return meta_repository
+        self.download(meta_repository)
+        if meta_repository['error']:
+            error_callback(meta_repository)
+            return meta_repository
+        res_json = json.loads(meta_repository['html'])
+        if "message" in res_json:
+            meta_repository['error'] = "Gitee cannot find this repository"
+            error_callback(meta_repository)
+            return meta_repository
+
+        # parser repository
+        if not res_json['html_url']:
+            meta_repository['error'] = "No clone URL"
+            error_callback(meta_repository)
+            return meta_repository
+
+        meta_repository['name'] = res_json['name']
+        meta_repository['section'] = res_json['owner']['name']
+        meta_repository['owner'] = res_json['owner']['name']
+        meta_repository['descriptions'] = res_json['description']
+        meta_repository['html_url'] = res_json['url']
+        meta_repository['clone_url'] = res_json['html_url']
         if self.matches_excludes(meta_repository):
             meta_repository['error'] = "exclude"
             error_callback(meta_repository)

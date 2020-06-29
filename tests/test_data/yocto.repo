@@ -1,0 +1,9 @@
+repo.url=crops
+repo.name=crops
+repo.desc=CROPS cross-platform development framework for Linux/Windows and Mac OS X hosts
+repo.owner=git repository hosting
+repo.section=Unclassified
+repo.path=E:/Git/GitMirror/data/yocto/e3a3b25ba330b23525667849771a4af5/crops.git
+repo.clone-url=http://192.168.0.108:8090/yocto/crops https://git.yoctoproject.org/git/crops
+repo.homepage=http://git.yoctoproject.org/cgit.cgi/crops/
+

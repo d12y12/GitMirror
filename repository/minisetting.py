@@ -15,6 +15,7 @@ class Setting:
             "LOG_FORMAT": '%(asctime)s:%(name)s:%(levelname)s:%(message)s',
             "LOG_LEVEL": 'DEBUG',
             "LOG_FILE": None,
+            "LOG_DIR": join(dirname(dirname(abspath(__file__))), "log"),
             "REQUESTS_CONNECTION_TIMEOUT": 3,
             "REQUESTS_READ_TIMEOUT": 10,
             "REQUESTS_RETRY_ENABLED": False,
@@ -28,7 +29,6 @@ class Setting:
             "BACKUP_DIR": join(dirname(dirname(abspath(__file__))), "backup"),
             "DB_BACKUP_DIR": join(dirname(dirname(abspath(__file__))), "backup/database"),
             "REPOS_BACKUP_DIR": join(dirname(dirname(abspath(__file__))), "backup/repositories"),
-            "LOG_DIR": join(dirname(dirname(abspath(__file__))), "log"),
             "DATA_DIR": '/srv/git',
             "CRON_FILE": join(dirname(dirname(abspath(__file__))), "crontab")
         }
