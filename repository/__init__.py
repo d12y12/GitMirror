@@ -12,7 +12,7 @@ import logging
 import platform
 from .minisetting import Setting
 from .store import RepositoryStore
-from .parser import Cgit, GitHub, ParserError
+from .parser import Cgit, GitHub, Gitee, ParserError
 from .mirror import RepositoryMirror
 from .utils import config_logging
 
@@ -25,7 +25,8 @@ class RepositoryManager:
         self.store = RepositoryStore(setting)
         self.parsers = {
             'cgit': Cgit(setting),
-            'github': GitHub(setting)
+            'github': GitHub(setting),
+            'gitee': Gitee(setting)
         }
         self.mirror = RepositoryMirror(setting)
         self.logger = logging.getLogger(self.__class__.__name__)

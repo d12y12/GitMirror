@@ -70,7 +70,7 @@ class  MirrorTest(unittest.TestCase):
                                         join(self.data_dir, 'yocto', 'yocto.repo')))
 
     def test_2_github_mirror(self):
-        # test 1 github mirror
+        # test 2 github mirror
         copy(join(self.test_data_dir, "github.sql"), join(self.dst_dir, "github.sql"))
         self.repo_manager.add_service("github")
         services, services_possible = self.repo_manager.get_services_list()
@@ -93,6 +93,31 @@ class  MirrorTest(unittest.TestCase):
             )))
             self.assertTrue(filecmp.cmp(join(self.test_data_dir, 'github.repo'), 
                                         join(self.data_dir, 'github', 'github.repo')))
+
+    def test_3_gitee_mirror(self):
+        # test 3 github mirror
+        copy(join(self.test_data_dir, "gitee.sql"), join(self.dst_dir, "gitee.sql"))
+        self.repo_manager.add_service("gitee")
+        services, services_possible = self.repo_manager.get_services_list()
+        self.assertIn("gitee", services)
+        repos = self.repo_manager.parse_service("gitee")
+        # run twice, 1st for init, 2nd for update
+        for num in range(0,2):
+            self.repo_manager.mirror_service("gitee")
+            self.assertTrue(exists(join(self.data_dir, 'gitee')))
+            self.assertTrue(exists(join(
+                self.data_dir,
+                'gitee',
+                md5("d12y12/temp".encode()).hexdigest()
+            )))
+            self.assertTrue(exists(join(
+                self.data_dir,
+                'gitee',
+                md5("d12y12/temp".encode()).hexdigest(),
+                'temp.git'
+            )))
+            self.assertTrue(filecmp.cmp(join(self.test_data_dir, 'gitee.repo'), 
+                                        join(self.data_dir, 'gitee', 'gitee.repo')))
 
     @classmethod
     def tearDownClass(cls):

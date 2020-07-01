@@ -2,5 +2,6 @@ SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
 # m h dom mon dow user  command
+*/5 * * * * E:\Git\GitMirror\gitmirror.py --batchrun gitee >> ${project_dir}\log\gitee.log 2>&1
 */5 * * * * ${project_dir}\gitmirror.py --batchrun github >> ${project_dir}\log\github.log 2>&1
 */5 * * * * ${project_dir}\gitmirror.py --batchrun yocto >> ${project_dir}\log\yocto.log 2>&1

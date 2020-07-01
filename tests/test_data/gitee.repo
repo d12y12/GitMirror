@@ -1,0 +1,9 @@
+repo.url=temp
+repo.name=temp
+repo.desc=test usage
+repo.owner=d12y12
+repo.section=d12y12
+repo.path=E:/Git/GitMirror/data/gitee/1d114e7a34a47f013d977da575d152f4/temp.git
+repo.clone-url=http://192.168.0.108:8090/gitee/temp https://gitee.com/d12y12/temp.git
+repo.homepage=https://gitee.com/api/v5/repos/d12y12/temp
+

@@ -32,11 +32,14 @@ class  ServicesTest(unittest.TestCase):
         # test 2 add 1 service github and 1 sql yocto
         copy(join(self.test_data_dir, "github.sql"), join(self.dst_dir, "github.sql"))
         copy(join(self.test_data_dir, "yocto.sql"), join(self.dst_dir, "yocto.sql"))
+        copy(join(self.test_data_dir, "gitee.sql"), join(self.dst_dir, "gitee.sql"))
         self.repo_manager.add_service("github")
         services, services_possible = self.repo_manager.get_services_list()
         self.assertEqual(len(listdir(self.backup_dir)), 1)
         self.assertIn("github", services)
         self.assertNotIn("yocto", services)
+        self.assertNotIn("gitee", services)
+        self.assertIn("gitee", services_possible)
         self.assertIn("yocto", services_possible)
         self.assertNotIn("github", services_possible)
 
@@ -46,30 +49,43 @@ class  ServicesTest(unittest.TestCase):
         self.assertEqual(len(listdir(self.backup_dir)), 2)
         self.assertIn("github", services)
         self.assertIn("yocto", services)
+        self.assertNotIn("gitee", services)
+        self.assertIn("gitee", services_possible)
+        self.assertNotIn("github", services_possible)
+        self.assertNotIn("yocto", services_possible)
+
+        # test 4 add service gitee
+        self.repo_manager.add_service("gitee")
+        services, services_possible = self.repo_manager.get_services_list()
+        self.assertEqual(len(listdir(self.backup_dir)), 3)
+        self.assertIn("github", services)
+        self.assertIn("yocto", services)
+        self.assertIn("gitee", services)
         self.assertFalse(services_possible)
 
     def test_3_add_duplicate_service(self):
-        # test 4 add duplicate service github
+        # test 5 add duplicate service github
         copy(join(self.test_data_dir, "github.sql"), join(self.dst_dir, "github.sql"))
         self.repo_manager.add_service("github")
         services, services_possible = self.repo_manager.get_services_list()
-        self.assertEqual(len(listdir(self.backup_dir)), 2)
+        self.assertEqual(len(listdir(self.backup_dir)), 3)
         self.assertIn("github", services)
         self.assertIn("yocto", services)
         self.assertFalse(services_possible)
 
     def test_4_add_updated_service(self):
-        # test 5 add updated service github
+        # test 6 add updated service github
         time.sleep(1)
         copy(join(self.test_data_dir, "github_update.sql"), join(self.dst_dir, "github.sql"))
         self.repo_manager.add_service("github")
         services, services_possible = self.repo_manager.get_services_list()
-        self.assertEqual(len(listdir(self.backup_dir)), 4)
+        self.assertEqual(len(listdir(self.backup_dir)), 5)
         self.assertIn("github", services)
         self.assertIn("yocto", services)
         self.assertFalse(services_possible)
     
     def test_5_cron_file(self):
+        # test 7 generate cron file
         cron_template = join(self.test_data_dir, 'crontab_template')
         with open(cron_template, 'rb') as fp:
             raw = fp.read().decode('utf8')
@@ -86,18 +102,29 @@ class  ServicesTest(unittest.TestCase):
         remove(self.setting['CRON_FILE'])
 
     def test_6_remove_services(self):
-        # test 6 remove service yocto
+        # test 8 remove service yocto
         self.repo_manager.remove_service("yocto")
         services, services_possible = self.repo_manager.get_services_list()
-        self.assertEqual(len(listdir(self.backup_dir)), 5)
+        self.assertEqual(len(listdir(self.backup_dir)), 6)
         self.assertIn("github", services)
+        self.assertIn("gitee", services)
         self.assertNotIn("yocto", services)
         self.assertFalse(services_possible)
 
         # test 7 remove service github
         self.repo_manager.remove_service("github")
         services, services_possible = self.repo_manager.get_services_list()
-        self.assertEqual(len(listdir(self.backup_dir)), 6)
+        self.assertEqual(len(listdir(self.backup_dir)), 7)
+        self.assertIn("gitee", services)
+        self.assertNotIn("github", services)
+        self.assertNotIn("yocto", services)
+        self.assertFalse(services_possible)
+
+        # test 8 remove service gitee
+        self.repo_manager.remove_service("gitee")
+        services, services_possible = self.repo_manager.get_services_list()
+        self.assertEqual(len(listdir(self.backup_dir)), 8)
+        self.assertNotIn("gitee", services)
         self.assertNotIn("github", services)
         self.assertNotIn("yocto", services)
         self.assertFalse(services_possible)
@@ -116,6 +143,10 @@ class  ServicesTest(unittest.TestCase):
         dst_dir = cls.setting['BACKUP_DIR']
         if exists(dst_dir):
             rmtree(dst_dir)
+        if exists(cls.setting['CRON_FILE']):
+            remove(cls.setting['CRON_FILE'])
+        if exists(join(dirname(dirname(abspath(__file__))), 'crontab_ref')):
+            remove(join(dirname(dirname(abspath(__file__))), 'crontab_ref'))
 
 if __name__ == '__main__':
     unittest.main()

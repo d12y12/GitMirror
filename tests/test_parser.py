@@ -3,18 +3,19 @@ from os.path import join, dirname, abspath, exists, isdir
 from shutil import copy, rmtree
 from os import remove, listdir
 import json
+import time
 import sys
 sys.path.insert(0, '..')
 from repository import RepositoryManager
 from repository.minisetting import Setting
-import time
+
 
 class  ParserTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         cls.setting = Setting()
-        cls.setting['LOG_ENABLED'] = False
+        # cls.setting['LOG_ENABLED'] = False
         cls.repo_manager = RepositoryManager(cls.setting)
         cls.test_data_dir = join(dirname(abspath(__file__)), "test_data")
         cls.dst_dir = cls.setting['DATABASE_DIR']
@@ -66,6 +67,34 @@ class  ParserTest(unittest.TestCase):
             repos_db_reform.append(repo)
         self.assertEqual(repos, repos_db_reform)
         remove("./github.json")
+        log_dir = self.setting['LOG_DIR']
+        self.assertTrue(0 <= len(listdir(log_dir)) <= 1)
+        for sub_file in listdir(log_dir):
+            sub_file = join(log_dir, sub_file)
+            with open(sub_file, "r", encoding='utf8') as data:
+                log_data = json.load(data)
+            if 'status' in log_data:
+                for source, status in log_data['status'].items():
+                    if 'error' in status:
+                        self.assertTrue('exclude' in status['error'] or 'download failed:' in status['error'])
+
+    def test_3_gitee_parser(self):
+        copy(join(self.test_data_dir, "gitee_parser.sql"), join(self.dst_dir, "gitee.sql"))
+        self.repo_manager.add_service("gitee")
+        services, services_possible = self.repo_manager.get_services_list()
+        self.assertIn("gitee", services)
+        repos = self.repo_manager.parse_service("gitee")
+        self.repo_manager.get_service_repos("gitee", "./gitee.json")
+        with open("./gitee.json", "r", encoding='utf8') as data:
+            repos_db = json.load(data)
+        repos_db_reform = []
+        for repo in repos_db:
+            del repo['id']
+            del repo['last_check']
+            del repo['last_update']
+            repos_db_reform.append(repo)
+        self.assertEqual(repos, repos_db_reform)
+        remove("./gitee.json")
         log_dir = self.setting['LOG_DIR']
         self.assertTrue(0 <= len(listdir(log_dir)) <= 1)
         for sub_file in listdir(log_dir):

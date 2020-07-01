@@ -26,7 +26,7 @@ VALUES
     '192.168.0.108:8090',
     1,
     '*/5 * * * *',
-    '{"cgit": [], "github": [{"source": "d12y12", "excludes": [], "targets": []}]}',
+    '{"cgit": [], "github": [{"source": "d12y12", "excludes": [], "targets": []}], "gitee": []}',
     ''
   );
 -- Table: Repositories
