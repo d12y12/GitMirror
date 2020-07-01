@@ -282,18 +282,21 @@ class RepositoryManager:
                 cron_log = join(self.setting['LOG_DIR'], service_name+'.log')
                 crontab.append('{} {} {} {} >> {} 2>&1\n'.format(cron, app, '--batchrun', service_name, cron_log))
         cron_path = self.setting['CRON_FILE']
-        cron = cron_header + "".join(crontab)
-        with open(cron_path, "w") as f:
-            f.write(cron)
-        # "crontab -u user cron_path" need root in alpine
-        if platform.system() == 'Linux':
-            self.logger.info("set cron tab")
-            subprocess.run(['crontab', cron_path])
-        # "crond reload" not exists in alpine
-        # self.logger.info("reload cron config")
-        # subprocess.run(['/etc/init.d/cron', 'reload'])
+        if crontab:
+            cron = cron_header + "".join(crontab)
+            with open(cron_path, "w") as f:
+                f.write(cron)
+            # "crontab -u user cron_path" need root in alpine
+            if platform.system() == 'Linux':
+                self.logger.info("set cron tab")
+                subprocess.run(['crontab', cron_path])
+            # "crond reload" not exists in alpine
+            # self.logger.info("reload cron config")
+            # subprocess.run(['/etc/init.d/cron', 'reload'])
+        else:
+            self.logger.info("No cron job found!")
         return True
-    
+
     def autoconf(self):
         services, services_possible = self.get_services_list()
         for service_name in services_possible:
